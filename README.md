@@ -68,3 +68,6 @@ in the `LICENSE` file.
 - [Xv6, a simple Unix-like teaching operating system](https://pdos.csail.mit.edu/6.828/2020/xv6.html)
 - [Basics of programming a UART](https://www.activexperts.com/serial-port-component/tutorials/uart/)
 - [QEMU RISC-V Virt Machine Platform](https://github.com/riscv/opensbi/blob/master/docs/platform/qemu_virt.md)
+
+## Add by MT
+- Works fine with qemu-4.1.0. Higher version many just hanged there and nothing happens.

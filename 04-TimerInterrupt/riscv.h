@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define reg_t uint32_t // RISCV32: register is 32bits
-// define reg_t as uint64_t // RISCV64: register is 64bits
+//#define reg_t uint32_t // RISCV32: register is 32bits
+#define reg_t uint64_t // RISCV64: register is 64bits
 
 // ref: https://www.activexperts.com/serial-port-component/tutorials/uart/
 #define UART        0x10000000
@@ -33,13 +33,13 @@ struct context {
 };
 
 // ref: https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/riscv.h
-// 
+//
 // local interrupt controller, which contains the timer.
 // ================== Timer Interrput ====================
 
 #define NCPU 8             // maximum number of CPUs
-#define CLINT 0x2000000
-#define CLINT_MTIMECMP(hartid) (CLINT + 0x4000 + 4*(hartid))
+#define CLINT 0x2000000L
+#define CLINT_MTIMECMP(hartid) (CLINT + 0x4000 + 8*(hartid))
 #define CLINT_MTIME (CLINT + 0xBFF8) // cycles since boot.
 
 // which hart (core) is this?

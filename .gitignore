@@ -1,5 +1,8 @@
 *~
 *.o
+*.d
+*.asm
+*.sym
 *.elf
 *.bin
 *.list

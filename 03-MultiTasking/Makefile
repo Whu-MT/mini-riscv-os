@@ -1,20 +1,49 @@
-CC = riscv64-unknown-elf-gcc
-CFLAGS = -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32
+CC = riscv64-linux-gnu-gcc
+LD = riscv64-linux-gnu-ld
+CFLAGS = -Wall -I. -nostdlib -fno-builtin -mcmodel=medany -g -Wall -ffreestanding -fno-common -nostdlib -mno-relax 
+CFLAGS += -fno-omit-frame-pointer -MD -fno-stack-protector -fno-pie -no-pie -O0
+GDB = gdb-multiarch
+SOURCE = ./
 
-QEMU = qemu-system-riscv32
-QFLAGS = -nographic -smp 4 -machine virt -bios none
+OBJ_C = \
+$(SOURCE)lib.o \
+$(SOURCE)os.o \
+$(SOURCE)task.o \
+$(SOURCE)user.o \
 
-OBJDUMP = riscv64-unknown-elf-objdump
+OBJ_S = \
+$(SOURCE)start.o \
+$(SOURCE)sys.o \
 
-all: os.elf
+QEMU = qemu-system-riscv64
+QFLAGS = -nographic -smp 1 -machine virt -bios none
 
-os.elf: start.s sys.s lib.c task.c os.c user.c
-	$(CC) $(CFLAGS) -T os.ld -o os.elf $^
+OBJDUMP = riscv64-linux-gnu-objdump
 
-qemu: $(TARGET)
+all: clean os.elf qemu
+
+test: clean os.elf qemu
+
+$(OBJ_C): %.o : %.c
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+$(OBJ_S): %.o : %.s
+	$(CC) $(CFLAGS) -c $< -o $@
+
+os.elf: $(OBJ_S) $(OBJ_C) 
+	$(LD) -T os.ld -o os.elf $^
+	$(OBJDUMP) -D os.elf > os.asm
+	$(OBJDUMP) -t os.elf > os.sym
+
+qemu: $(TARGET) 
 	@qemu-system-riscv32 -M ? | grep virt >/dev/null || exit
 	@echo "Press Ctrl-A and then X to exit QEMU"
 	$(QEMU) $(QFLAGS) -kernel os.elf
+qemu-gdb: $(TARGET)
+	@qemu-system-riscv32 -M ? | grep virt >/dev/null || exit
+	@echo "Press Ctrl-A and then X to exit QEMU"
+	$(QEMU) $(QFLAGS) -S -gdb tcp::1234 -kernel os.elf
 
 clean:
-	rm -f *.elf
+	rm -f *.elf *.img
+	rm -f $(SOURCE)/*.o
+
