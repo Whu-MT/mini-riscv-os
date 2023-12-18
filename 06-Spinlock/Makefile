@@ -1,32 +1,46 @@
-CC = riscv64-unknown-elf-gcc
-CFLAGS = -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32
-GDB = riscv64-unknown-elf-gdb
+CC = riscv64-linux-gnu-gcc
+LD = riscv64-linux-gnu-ld
+CFLAGS = -nostdlib -fno-builtin -mcmodel=medany -march=rv64imafd -mabi=lp64d -ggdb -Wall -w -O -ffreestanding -fno-common -mno-relax
+GDB = gdb-multiarch
 
-OBJ = \
-start.s \
-sys.s \
-lib.c \
-timer.c \
-task.c \
-os.c \
-user.c \
-trap.c \
-lock.c
+OBJ_C = \
+lib.o \
+timer.o \
+task.o \
+os.o \
+user.o \
+trap.o \
+lock.o
 
-QEMU = qemu-system-riscv32
+OBJ_S = \
+start.o \
+sys.o
+
+QEMU = qemu-system-riscv64
 QFLAGS = -nographic -smp 4 -machine virt -bios none
 
-OBJDUMP = riscv64-unknown-elf-objdump
+OBJDUMP = riscv64-linux-gnu-objdump
 
 all: os.elf
 
-os.elf: $(OBJ)
-	$(CC) $(CFLAGS) -g -Wall -T os.ld -o os.elf $^
+$(OBJ_C): %.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJ_S): %.o : %.s
+	$(CC) $(CFLAGS) -c $< -o $@
+
+os.elf: $(OBJ_S) $(OBJ_C)
+	$(LD) -T os.ld -o os.elf $^
+	$(OBJDUMP) -D os.elf > os.asm
+	$(OBJDUMP) -t os.elf > os.sym
 
 qemu: $(TARGET)
-	@qemu-system-riscv32 -M ? | grep virt >/dev/null || exit
+	@qemu-system-riscv64 -M ? | grep virt >/dev/null || exit
 	@echo "Press Ctrl-A and then X to exit QEMU"
 	$(QEMU) $(QFLAGS) -kernel os.elf
+
+qemu-gdb: $(TARGET)
+	@echo "*** Now run 'gdb' in another window." 1>&2
+	$(QEMU) $(QFLAGS) -kernel os.elf -S -gdb tcp::12345
 
 clean:
 	rm -f *.elf

@@ -10,6 +10,7 @@ void os_kernel()
 void os_start()
 {
 	lib_puts("OS start\n");
+	lib_puts("OS start\n");
 	user_init();
 	trap_init();
 	timer_init(); // start timer interrupt ...
@@ -17,7 +18,9 @@ void os_start()
 
 int os_main(void)
 {
+	lib_puts("be");
 	os_start();
+	lib_puts("after start\n");
 
 	int current_task = 0;
 	while (1)

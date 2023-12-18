@@ -30,7 +30,7 @@ reg_t trap_handler(reg_t epc, reg_t cause)
   reg_t return_pc = epc;
   reg_t cause_code = cause & 0xfff;
 
-  if (cause & 0x80000000)
+  if (cause & 0x8000000000000000)
   {
     /* Asynchronous trap - interrupt */
     switch (cause_code)

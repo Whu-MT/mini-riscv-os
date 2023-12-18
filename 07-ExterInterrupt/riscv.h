@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define reg_t uint32_t // RISCV32: register is 32bits
-// define reg_t as uint64_t // RISCV64: register is 64bits
+//#define reg_t uint32_t // RISCV32: register is 32bits
+#define reg_t uint64_t // RISCV64: register is 64bits
 
 // ref: https://www.activexperts.com/serial-port-component/tutorials/uart/
 #define UART 0x10000000L
@@ -15,7 +15,7 @@
 #define UART_IER (volatile uint8_t *)(UART + 0x01) // Interrupt Enable Register
 #define UART_LCR (volatile uint8_t *)(UART + 0x03) // Line Control Register
 #define UART_LSR (volatile uint8_t *)(UART + 0x05) // LSR:line status register
-#define UART_LSR_EMPTY_MASK 0x40                   // LSR Bit 6: Transmitter empty; both the THR and LSR are empty
+#define UART_LSR_EMPTY_MASK 0x20                   // LSR Bit 6: Transmitter empty; both the THR and LSR are empty
 
 #define UART_REGR(reg) (*(reg))
 #define UART_REGW(reg, v) ((*reg) = (v))

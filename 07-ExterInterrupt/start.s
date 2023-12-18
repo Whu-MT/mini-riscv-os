@@ -5,8 +5,11 @@
 _start:
     # setup stacks per hart
     csrr t0, mhartid                # read current hart id
-    slli t0, t0, 10                 # shift left the hart id by 1024
-    la   sp, stacks + STACK_SIZE    # set the initial stack pointer 
+    addi t0, t0, 1
+    li t1, 1024 * 8
+    mul t0, t0, t1
+    la   sp, stacks
+                                    # set the initial stack pointer 
                                     # to the end of the stack space
     add  sp, sp, t0                 # move the current hart stack pointer
                                     # to its place in the stack space

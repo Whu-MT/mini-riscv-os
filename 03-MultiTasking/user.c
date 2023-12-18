@@ -7,7 +7,7 @@ void user_task0(void)
 	os_kernel();
 	while (1) {
 		lib_puts("Task0: Running...\n");
-		lib_delay(1000);
+		//lib_delay(1000);
 		os_kernel();
 	}
 }
@@ -19,7 +19,7 @@ void user_task1(void)
 	os_kernel();
 	while (1) {
 		lib_puts("Task1: Running...\n");
-		lib_delay(1000);
+		//lib_delay(1000);
 		os_kernel();
 	}
 }

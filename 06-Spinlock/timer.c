@@ -3,7 +3,8 @@
 // a scratch area per CPU for machine-mode timer interrupts.
 reg_t timer_scratch[NCPU][5];
 
-#define interval 20000000 // cycles; about 2 second in qemu.
+//#define interval 20000000 // cycles; about 2 second in qemu.
+#define interval 20000 // cycles; about 2 second in qemu.
 
 void timer_init()
 {
@@ -17,11 +18,11 @@ void timer_init()
 
   // prepare information in scratch[] for timervec.
   // scratch[0..2] : space for timervec to save registers.
-  // scratch[3] : address of CLINT MTIMECMP register.
-  // scratch[4] : desired interval (in cycles) between timer interrupts.
+  // scratch[4] : address of CLINT MTIMECMP register.
+  // scratch[5] : desired interval (in cycles) between timer interrupts.
   reg_t *scratch = &timer_scratch[id][0];
-  scratch[3] = CLINT_MTIMECMP(id);
-  scratch[4] = interval;
+  scratch[4] = CLINT_MTIMECMP(id);
+  scratch[5] = interval;
   w_mscratch((reg_t)scratch);
 
   // enable machine-mode timer interrupts.

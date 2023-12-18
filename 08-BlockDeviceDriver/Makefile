@@ -1,39 +1,53 @@
-CC = riscv64-unknown-elf-gcc
-CFLAGS = -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -w
-GDB = riscv64-unknown-elf-gdb
+CC = riscv64-linux-gnu-gcc
+LD = riscv64-linux-gnu-ld
+CFLAGS = -nostdlib -fno-builtin -mcmodel=medany -march=rv64imafdc -mabi=lp64d -ggdb -Wall -ffreestanding -fno-common -mno-relax -fno-omit-frame-pointer -fno-stack-protector
+GDB = gdb-multiarch
 
-OBJ = \
-start.s \
-sys.s \
-lib.c \
-timer.c \
-task.c \
-os.c \
-user.c \
-trap.c \
-lock.c \
-plic.c \
-virtio.c \
-string.c
+OBJ_C = \
+lib.o \
+timer.o \
+task.o \
+os.o \
+user.o \
+trap.o \
+lock.o \
+plic.o \
+virtio.o \
+string.o
 
-QEMU = qemu-system-riscv32
+OBJ_S = \
+start.o \
+sys.o
+
+QEMU = qemu-system-riscv64
 QFLAGS = -nographic -smp 4 -machine virt -bios none
 QFLAGS += -drive if=none,format=raw,file=hdd.dsk,id=x0
 QFLAGS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
-OBJDUMP = riscv64-unknown-elf-objdump
+OBJDUMP = riscv64-linux-gnu-objdump
 
-all: clean os.elf hdd.dsk qemu
+all: clean os.elf hdd.dsk
+
+$(OBJ_C): %.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJ_S): %.o : %.s
+	$(CC) $(CFLAGS) -c $< -o $@
 
 test: clean os.elf qemu
 
-os.elf: $(OBJ)
-	$(CC) $(CFLAGS) -T os.ld -o os.elf $^
+os.elf: $(OBJ_S) $(OBJ_C)
+	$(LD) -T os.ld -o os.elf $^
+	$(OBJDUMP) -D os.elf > os.asm
+	$(OBJDUMP) -t os.elf > os.sym
 
 qemu: $(TARGET) hdd.dsk
-	@qemu-system-riscv32 -M ? | grep virt >/dev/null || exit
+	@qemu-system-riscv64 -M ? | grep virt >/dev/null || exit
 	@echo "Press Ctrl-A and then X to exit QEMU"
 	$(QEMU) $(QFLAGS) -kernel os.elf
+
+qemu-gdb: $(TARGET)
+	@echo "*** Now run 'gdb' in another window." 1>&2
+	$(QEMU) $(QFLAGS) -kernel os.elf -S -gdb tcp::12345
 
 clean:
 	rm -f *.elf *.img

@@ -1,4 +1,4 @@
-CC = riscv64-linux-gnu-gcc
+CC = riscv64-linux-gnu-gcc -march=rv64imafd -mabi=lp64d
 LD = riscv64-linux-gnu-ld
 CFLAGS = -nostdlib -fno-builtin -mcmodel=medany -ggdb -O -ffreestanding -fno-common -nostdlib -mno-relax
 CFLAGS += -fno-omit-frame-pointer -MD -fno-stack-protector -fno-pie -no-pie

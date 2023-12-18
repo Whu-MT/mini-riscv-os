@@ -12,7 +12,8 @@ int lib_putc(char ch) {
 }
 
 void lib_puts(char *s) {
-	while (*s) lib_putc(*s++);
+	while (*s) 
+        lib_putc(*s++);
 }
 
 

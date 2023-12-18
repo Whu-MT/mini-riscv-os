@@ -105,7 +105,7 @@ os.elf: start.s os.c
 	$(CC) $(CFLAGS) -T os.ld -o os.elf $^
 
 qemu: $(TARGET)
-	@qemu-system-riscv32 -M ? | grep virt >/dev/null || exit
+	@qemu-system-riscv64 -M ? | grep virt >/dev/null || exit
 	@echo "Press Ctrl-A and then X to exit QEMU"
 	$(QEMU) $(QFLAGS) -kernel os.elf
 

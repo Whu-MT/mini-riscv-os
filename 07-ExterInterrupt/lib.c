@@ -63,8 +63,11 @@ void lib_isr(void)
         }
         else
         {
+            /*
             lib_putc((char)c);
             lib_putc('\n');
+            */
+            lib_printf("[%c]\n", c);
         }
     }
 }

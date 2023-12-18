@@ -1,8 +1,7 @@
-CC = riscv64-linux-gnu-gcc
+CC = riscv64-linux-gnu-gcc -march=rv64imafd -mabi=lp64d
 LD = riscv64-linux-gnu-ld
 CFLAGS = -I. -nostdlib -fno-builtin -mcmodel=medany -g -Wall -w -D CONFIG_SYSCALL -O -ffreestanding -fno-common -nostdlib -mno-relax
 GDB = gdb-multiarch
-SOURCE = ./
 
 OBJ_C = \
 lib.o \
@@ -15,7 +14,7 @@ start.o \
 sys.o \
 
 QEMU = qemu-system-riscv64
-QFLAGS = -nographic -smp 1 -machine virt -bios none
+QFLAGS = -nographic -smp 4 -machine virt -bios none
 
 OBJDUMP = riscv64-linux-gnu-objdump
 
@@ -34,11 +33,11 @@ os.elf: $(OBJ_S) $(OBJ_C)
 	$(OBJDUMP) -t os.elf > os.sym
 
 qemu: $(TARGET)
-	@qemu-system-riscv32 -M ? | grep virt >/dev/null || exit
+	@qemu-system-riscv64 -M ? | grep virt >/dev/null || exit
 	@echo "Press Ctrl-A and then X to exit QEMU"
 	$(QEMU) $(QFLAGS) -kernel os.elf
 qemu-gdb: $(TARGET)
-	@qemu-system-riscv32 -M ? | grep virt >/dev/null || exit
+	@qemu-system-riscv64 -M ? | grep virt >/dev/null || exit
 	@echo "Press Ctrl-A and then X to exit QEMU"
 	$(QEMU) $(QFLAGS) -S -gdb tcp::1234 -kernel os.elf
 

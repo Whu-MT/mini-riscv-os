@@ -111,6 +111,11 @@ void virtio_disk_init()
   status |= VIRTIO_CONFIG_S_DRIVER_OK;
   *R(VIRTIO_MMIO_STATUS) = status;
 
+  /* recheck status ok*/
+  int restatus = *R(VIRTIO_MMIO_STATUS);
+  if (!(restatus & VIRTIO_CONFIG_S_DRIVER_OK))
+    panic("virtio disk FEATURES_OK unset");
+
   *R(VIRTIO_MMIO_GUEST_PAGE_SIZE) = PGSIZE;
   /* initialize queue 0. */
   *R(VIRTIO_MMIO_QUEUE_SEL) = 0;
@@ -119,11 +124,16 @@ void virtio_disk_init()
     panic("virtio disk has no queue 0\n");
   if (max < NUM)
     panic("virtio disk max queue too short\n");
+  lib_printf("%d\n", __LINE__);
   *R(VIRTIO_MMIO_QUEUE_NUM) = NUM;
   memset(disk.pages, 0, sizeof(disk.pages));
-  *R(VIRTIO_MMIO_QUEUE_PFN) = ((uint32)disk.pages) / PGSIZE;
-  *R(VIRTIO_MMIO_QUEUE_ALIGN) = PGSIZE;
-  *R(VIRTIO_MMIO_QUEUE_READY) = 1;
+  // TODO: uint64?
+  lib_printf("disk.pages(32): %x, disk.pages(64): %x\n", (uint32)&(disk.pages), &disk.pages);
+  *R(VIRTIO_MMIO_QUEUE_PFN) = ((uint64)disk.pages) / PGSIZE;
+  //*R(VIRTIO_MMIO_QUEUE_ALIGN) = PGSIZE;
+  //*R(VIRTIO_MMIO_QUEUE_READY) = 1;
+  lib_printf("%d\n", __LINE__);
+
   // desc = pages -- num * virtq_desc
   // avail = pages + 0x40 -- 2 * uint16, then num * uint16
   // used = pages + 4096 -- 2 * uint16, then num * vRingUsedElem
@@ -131,9 +141,13 @@ void virtio_disk_init()
   disk.avail = (struct virtq_avail *)(disk.pages + NUM * sizeof(virtq_desc_t));
   disk.used = (struct virtq_used *)(disk.pages + PGSIZE);
 
+  // TOOD: low high的问题?
+  /*
+  lib_printf("disk.desc: %x\n", &disk.desc);
   *R(VIRTIO_MMIO_QueueDescLow) = disk.desc;
   *R(VIRTIO_MMIO_QueueAvailLow) = disk.avail;
   *R(VIRTIO_MMIO_QueueUsedLow) = disk.used;
+  */
 
   // all NUM descriptors start out unused.
   for (int i = 0; i < NUM; i++)
@@ -238,7 +252,7 @@ void virtio_disk_rw(struct blk *b, int write)
   disk.desc[idx[0]].flags = VRING_DESC_F_NEXT;
   disk.desc[idx[0]].next = idx[1];
 
-  disk.desc[idx[1]].addr = ((uint32)b->data) & 0xffffffff;
+  disk.desc[idx[1]].addr = (uint64)b->data;
   disk.desc[idx[1]].len = BSIZE;
   if (write)
     disk.desc[idx[1]].flags = 0; // device reads b->data
@@ -267,15 +281,18 @@ void virtio_disk_rw(struct blk *b, int write)
   // tell the device another avail ring entry is available.
   disk.avail->idx += 1; // not % NUM ...
 
+  lib_printf("wait b: %p\n", b);
   *R(VIRTIO_MMIO_QUEUE_NOTIFY) = 0; // The device starts immediately when we write 0 to queue_notify.
   while (b->disk == 1)
-  {
-  }
+    ;
+  lib_printf("after wait b: %p\n", b);
 
   disk.info[idx[0]].b = 0;
   free_chain(idx[0]);
+  lib_printf("after free_chain\n");
 
   lock_free(&disk.vdisk_lock);
+  lib_printf("after lock_free\n");
 }
 
 void virtio_disk_isr()
@@ -288,7 +305,7 @@ void virtio_disk_isr()
   // the "used" ring, in which case we may process the new
   // completion entries in this interrupt, and have nothing to do
   // in the next interrupt, which is harmless.
-  *R(VIRTIO_MMIO_INTERRUPT_ACK) = *R(VIRTIO_MMIO_INTERRUPT_STATUS) & 0x3;
+  lib_printf("in virtio_disk_isr\n");
 
   __sync_synchronize();
 
@@ -304,9 +321,13 @@ void virtio_disk_isr()
       panic("virtio_disk_intr status");
 
     struct blk *b = disk.info[id].b;
+    // TODO 把id 地址打印出来
+    lib_printf("set b %p\n", b);
     b->disk = 0;
     disk.used_idx += 1;
   }
 
+  *R(VIRTIO_MMIO_INTERRUPT_ACK) = *R(VIRTIO_MMIO_INTERRUPT_STATUS) & 0x3;
+  lib_printf("end virtio_disk_isr\n");
   //lock_free(&disk.vdisk_lock);
 }

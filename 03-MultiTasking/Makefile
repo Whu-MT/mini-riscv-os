@@ -1,4 +1,4 @@
-CC = riscv64-linux-gnu-gcc
+CC = riscv64-linux-gnu-gcc -march=rv64imafd -mabi=lp64d
 LD = riscv64-linux-gnu-ld
 CFLAGS = -Wall -I. -nostdlib -fno-builtin -mcmodel=medany -g -Wall -ffreestanding -fno-common -nostdlib -mno-relax 
 CFLAGS += -fno-omit-frame-pointer -MD -fno-stack-protector -fno-pie -no-pie -O0
@@ -20,7 +20,7 @@ QFLAGS = -nographic -smp 1 -machine virt -bios none
 
 OBJDUMP = riscv64-linux-gnu-objdump
 
-all: clean os.elf qemu
+all: clean os.elf
 
 test: clean os.elf qemu
 
@@ -35,11 +35,11 @@ os.elf: $(OBJ_S) $(OBJ_C)
 	$(OBJDUMP) -t os.elf > os.sym
 
 qemu: $(TARGET) 
-	@qemu-system-riscv32 -M ? | grep virt >/dev/null || exit
+	@qemu-system-riscv64 -M ? | grep virt >/dev/null || exit
 	@echo "Press Ctrl-A and then X to exit QEMU"
 	$(QEMU) $(QFLAGS) -kernel os.elf
 qemu-gdb: $(TARGET)
-	@qemu-system-riscv32 -M ? | grep virt >/dev/null || exit
+	@qemu-system-riscv64 -M ? | grep virt >/dev/null || exit
 	@echo "Press Ctrl-A and then X to exit QEMU"
 	$(QEMU) $(QFLAGS) -S -gdb tcp::1234 -kernel os.elf
 

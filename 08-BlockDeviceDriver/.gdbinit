@@ -1,4 +1,5 @@
 set disassemble-next-line on
-b _start
+b trap_vector
+b *0x8000198e
 target remote : 12345
 c
